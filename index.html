@@ -35,6 +35,7 @@
 <link rel="preload" as="image" href="pixel_cauliflower_128.png" />
 <link rel="preload" as="image" href="pixel_tomato_128.png" />
 <link rel="preload" as="image" href="pixel_cucumber_128.png" />
+<link rel="preload" as="image" href="pixel_leek_128.png" />
 
 <style>
   :root {
@@ -123,7 +124,8 @@ const sources = {
   carrot_gold:  "pixel_carrot_128_gold.png",
   cauliflower:  "pixel_cauliflower_128.png",
   tomato:       "pixel_tomato_128.png",
-  cucumber:     "pixel_cucumber_128.png"
+  cucumber:     "pixel_cucumber_128.png",
+  leek:         "pixel_leek_128.png"
 };
 const labels = {
   broccoli: "🥦 Broccoli",
@@ -131,11 +133,12 @@ const labels = {
   carrot_gold: "🥕✨ Golden Carrot",
   cauliflower: "🌸 Cauliflower",
   tomato: "🍅 Tomato",
-  cucumber: "🥒 Cucumber"
+  cucumber: "🥒 Cucumber"🥬
+  leek: "🥬 Leek"
 };
 
 /* Weighted random pick: normal veggies weight 4, golden carrot weight 1 */
-const weights = { broccoli:4, carrot:4, cauliflower:4, tomato:4, cucumber:4, carrot_gold:1 };
+const weights = { broccoli:4, carrot:4, cauliflower:4, tomato:4, cucumber:4, leek:4, carrot_gold:1 };
 
 function pickWeighted(obj) {
   const entries = Object.entries(obj);
