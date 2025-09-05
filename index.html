@@ -28,15 +28,6 @@
 <link rel="canonical" href="https://rotatingveggies.com/" />
 <meta name="theme-color" content="#0b1220" />
 
-<!-- Preload sprite images -->
-<link rel="preload" as="image" href="pixel_broccoli_128.png" />
-<link rel="preload" as="image" href="pixel_carrot_128.png" />
-<link rel="preload" as="image" href="pixel_carrot_128_gold.png" />
-<link rel="preload" as="image" href="pixel_cauliflower_128.png" />
-<link rel="preload" as="image" href="pixel_tomato_128.png" />
-<link rel="preload" as="image" href="pixel_cucumber_128.png" />
-<link rel="preload" as="image" href="pixel_leek_128.png" />
-
 <style>
   :root {
     --stage-max: 78vmin;
@@ -75,6 +66,7 @@
     transform-origin: center center;
     animation: spin var(--speed) linear infinite;
     filter: drop-shadow(0 18px 50px rgba(0,0,0,.45));
+    cursor: pointer;
   }
   @keyframes spin {
     from { transform: rotateX(var(--tiltX)) rotateY(var(--tiltY)) scale(var(--scale)) rotateZ(0deg); }
@@ -93,14 +85,14 @@
     color: #e2e8f0;
     font: 700 1.6rem/1.2 system-ui, sans-serif;
     text-shadow: 0 2px 6px rgba(0,0,0,0.6);
-    pointer-events: none; /* don't block clicks */
+    pointer-events: none; /* nicht klickbar */
   }
 
   /* particles canvas overlay */
   #burst {
     position: absolute;
     inset: 0;
-    pointer-events: none; /* only visual */
+    pointer-events: none; /* nur visuell */
   }
 </style>
 </head>
@@ -109,59 +101,97 @@
   <div class="stage" id="stage">
     <img id="sprite" class="sprite" src="" alt="Pixel Veggie" />
     <h1 id="headline">Huh?</h1>
-    <!-- canvas is injected dynamically when needed -->
   </div>
 
 <script>
+/* --- Single source of truth --- */
+const VEGGIES = [
+  { key: "broccoli",     label: "Broccoli",      weight: 4 },
+  { key: "carrot",       label: "Carrot",        weight: 4 },
+  { key: "carrot_gold",  label: "Golden Carrot", weight: 1 },
+  { key: "cauliflower",  label: "Cauliflower",   weight: 4 },
+  { key: "tomato",       label: "Tomato",        weight: 4 },
+  { key: "cucumber",     label: "Cucumber",      weight: 4 },
+  { key: "corn",         label: "Corn",          weight: 4 },
+  { key: "eggplant",     label: "Eggplant",      weight: 4 },
+  { key: "potato",       label: "Potato",        weight: 4 },
+  { key: "pumpkin",      label: "Pumpkin",       weight: 4 },
+  { key: "radish",       label: "Radish",        weight: 4 },
+  { key: "leek",         label: "Leek",          weight: 4 }
+];
+
+const fileFor = (key) => `pixel_${key}_128.png`;
+const isGoldenKey = (key) => key === "carrot_gold";
+
+/* Preload all images */
+(function addPreloads(){
+  const head = document.head;
+  VEGGIES.forEach(v => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = fileFor(v.key);
+    head.appendChild(link);
+  });
+})();
+
 const stage = document.getElementById('stage');
 const sprite = document.getElementById('sprite');
 const headline = document.getElementById('headline');
 
-/* Sprite sources */
-const sources = {
-  broccoli:     "pixel_broccoli_128.png",
-  carrot:       "pixel_carrot_128.png",
-  carrot_gold:  "pixel_carrot_128_gold.png",
-  cauliflower:  "pixel_cauliflower_128.png",
-  tomato:       "pixel_tomato_128.png",
-  cucumber:     "pixel_cucumber_128.png",
-  leek:         "pixel_leek_128.png"
-};
-const labels = {
-  broccoli: "🥦 Broccoli",
-  carrot: "🥕 Carrot",
-  carrot_gold: "🥕✨ Golden Carrot",
-  cauliflower: "🌸 Cauliflower",
-  tomato: "🍅 Tomato",
-  cucumber: "🥒 Cucumber",
-  leek: "🥬 Leek"
-};
-
-/* Weighted random pick: normal veggies weight 4, golden carrot weight 1 */
-const weights = { broccoli:4, carrot:4, cauliflower:4, tomato:4, cucumber:4, leek:4, carrot_gold:1 };
-
-function pickWeighted(obj) {
-  const entries = Object.entries(obj);
-  const total = entries.reduce((sum,[,w]) => sum+w, 0);
+/* Weighted random pick */
+function pickWeighted(list) {
+  const total = list.reduce((sum, v) => sum + (v.weight || 1), 0);
   let r = Math.random() * total;
-  for (const [key, weight] of entries) {
-    if ((r -= weight) < 0) return key;
+  for (const v of list) {
+    r -= (v.weight || 1);
+    if (r < 0) return v;
+  }
+  return list[0];
+}
+
+/* State */
+let currentVeggie = null;
+let inBurst = false;
+
+/* Show a veggie */
+function showVeggie(veggie) {
+  currentVeggie = veggie;
+
+  sprite.src = fileFor(veggie.key);
+  sprite.alt = veggie.label;
+  sprite.title = veggie.label;
+
+  const golden = isGoldenKey(veggie.key);
+  headline.style.display = golden ? "block" : "none";
+
+  // neue zufällige Drehrichtung
+  const dir = Math.random() < 0.5 ? 1 : -1;
+  document.documentElement.style.setProperty("--dir", dir);
+
+  // Golden: Burst vorbereiten
+  if (golden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    sprite.addEventListener('click', onGoldenClick, { once: true });
   }
 }
 
-/* Pick a random veggie on load */
-const randKey = pickWeighted(weights);
-sprite.src = sources[randKey];
-sprite.alt = labels[randKey];
-sprite.title = labels[randKey];
+/* Golden-click handler */
+function onGoldenClick() {
+  if (inBurst) return;
+  inBurst = true;
+  spawnGoldenBurst(() => {
+    inBurst = false;
+  });
+}
 
-/* Show headline if golden carrot */
-const isGolden = randKey === "carrot_gold";
-headline.style.display = isGolden ? "block" : "none";
+/* Initial veggie */
+showVeggie(pickWeighted(VEGGIES));
 
-/* Random spin direction */
-const dir = Math.random() < 0.5 ? 1 : -1;
-document.documentElement.style.setProperty("--dir", dir);
+/* Jeder Klick → neues Gemüse (außer während Burst) */
+sprite.addEventListener('click', () => {
+  if (inBurst) return;
+  showVeggie(pickWeighted(VEGGIES));
+});
 
 /* Stage sizing */
 function applyStageSize() {
@@ -175,7 +205,7 @@ addEventListener('resize', applyStageSize, { passive: true });
 addEventListener('orientationchange', applyStageSize);
 applyStageSize();
 
-/* Subtle wobble */
+/* Wobble */
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   let t = 0;
   (function wobble() {
@@ -186,24 +216,14 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   })();
 }
 
-/* --- Golden Carrot burst: one-time per load --- */
-let burstDone = false;
-if (isGolden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  sprite.addEventListener('click', () => {
-    if (burstDone) return;
-    burstDone = true;
-    spawnGoldenBurst();
-  }, { once: true });
-}
-
-function spawnGoldenBurst() {
-  // create canvas overlay
+/* Golden Carrot burst */
+function spawnGoldenBurst(onEnd) {
   const canvas = document.createElement('canvas');
   canvas.id = 'burst';
   stage.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
-  const dpr = Math.min(window.devicePixelRatio || 1, 3); // cap DPR for perf
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
 
   function resizeCanvas() {
     const rect = stage.getBoundingClientRect();
@@ -211,31 +231,27 @@ function spawnGoldenBurst() {
     canvas.style.height = rect.height + 'px';
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing to CSS pixels
-    ctx.imageSmoothingEnabled = false;     // keep pixel look
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
   }
   resizeCanvas();
   addEventListener('resize', resizeCanvas, { passive:true });
 
-  // particle image (golden carrot)
   const img = new Image();
-  img.src = sources.carrot_gold;
+  img.src = fileFor('carrot_gold');
 
-  // set up particles once the image is ready (or immediately if cached)
   img.onload = () => startBurst(img);
   if (img.complete) startBurst(img);
 
   function startBurst(image) {
     const rect = stage.getBoundingClientRect();
-    // origin at center of stage (in CSS pixels)
     const origin = { x: rect.width / 2, y: rect.height / 2 };
 
-    // create particles
-    const count = 90; // number of carrots
+    const count = 90;
     const particles = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 180 + Math.random() * 220; // px/sec
+      const speed = 180 + Math.random() * 220;
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
 
@@ -243,31 +259,27 @@ function spawnGoldenBurst() {
         x: origin.x,
         y: origin.y,
         vx, vy,
-        life: 0,                // elapsed
-        ttl: 900 + Math.random()*400, // ms
-        size: 10 + Math.random()*12,  // draw size (px)
+        life: 0,
+        ttl: 900 + Math.random()*400,
+        size: 10 + Math.random()*12,
         rot: Math.random() * Math.PI * 2,
-        vr: (Math.random() - 0.5) * 3.0 // rotation speed rad/sec
+        vr: (Math.random() - 0.5) * 3.0
       });
     }
 
-    const start = performance.now();
-    let prev = start;
+    let prev = performance.now();
 
     function tick(now) {
-      const dt = Math.min(50, now - prev); // ms
+      const dt = Math.min(50, now - prev);
       prev = now;
 
-      // clear
       ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
-      // update & draw
       let alive = 0;
       for (const p of particles) {
         p.life += dt;
         if (p.life > p.ttl) continue;
 
-        // simple motion (no gravity), slight drag
         const drag = 0.998;
         p.vx *= drag;
         p.vy *= drag;
@@ -276,9 +288,8 @@ function spawnGoldenBurst() {
         p.y += (p.vy * dt) / 1000;
         p.rot += p.vr * (dt / 1000);
 
-        // fade out towards end
         const t = p.life / p.ttl;
-        const alpha = 1 - t*t; // ease-out
+        const alpha = 1 - t*t;
         if (alpha <= 0) continue;
 
         ctx.save();
@@ -294,9 +305,9 @@ function spawnGoldenBurst() {
       if (alive > 0) {
         requestAnimationFrame(tick);
       } else {
-        // cleanup
         canvas.remove();
         removeEventListener('resize', resizeCanvas);
+        if (typeof onEnd === 'function') onEnd();
       }
     }
 
