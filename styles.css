@@ -1,0 +1,85 @@
+:root {
+  --stage-max: 90vmin;
+  --stage-max-px: 600px;
+  --speed: 6s;
+  --tiltX: 8deg;
+  --tiltY: 0deg;
+  --scale: 0.9;
+  --dir: 1;
+
+  /* Raum für Schatten/Rotation ohne äußere Größe zu verändern */
+  --bleed: clamp(32px, 10vmin, 80px);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: #0b1220;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+.stage {
+  width: min(var(--stage-max), var(--stage-max-px));
+  aspect-ratio: 1/1;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  contain: layout paint;
+  position: relative; /* overlay anchor */
+  box-sizing: border-box;
+  padding: var(--bleed);
+  overflow: hidden; /* behält den Look, verhindert Abschneiden dank padding */
+}
+
+.sprite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-origin: center center;
+  animation: spin var(--speed) linear infinite;
+  filter: drop-shadow(0 14px 40px rgba(0,0,0,.45));
+  cursor: pointer;
+}
+
+@keyframes spin {
+  from { transform: rotateX(var(--tiltX)) rotateY(var(--tiltY)) scale(var(--scale)) rotateZ(0deg); }
+  to   { transform: rotateX(var(--tiltX)) rotateY(var(--tiltY)) scale(var(--scale)) rotateZ(calc(var(--dir) * 360deg)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprite { animation: none; }
+}
+
+/* overlay headline for golden carrot */
+#headline {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: none;
+  color: #e2e8f0;
+  font: 700 1.6rem/1.2 system-ui, sans-serif;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+/* particles canvas overlay */
+#burst {
+  position: absolute;
+  inset: 0;           /* bezieht padding mit ein -> passt zur Stage */
+  pointer-events: none;
+}
+
+/* Sanfte Notbremse für sehr kleine Screens */
+@media (max-width: 380px) {
+  :root { --scale: .92; }
+  .sprite { filter: drop-shadow(0 12px 28px rgba(0,0,0,.45)); }
+}

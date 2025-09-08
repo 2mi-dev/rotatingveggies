@@ -1,336 +1,40 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Rotating Veggies</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Rotating Veggies</title>
 
-<!-- Favicon -->
-<link rel="icon" type="image/png" sizes="32x32" href="pixel_broccoli_128.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="pixel_broccoli_128.png" />
-<link rel="apple-touch-icon" href="pixel_broccoli_128.png" />
+  <!-- Favicon / Social -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/pixel_broccoli_128.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/pixel_broccoli_128.png" />
+  <link rel="apple-touch-icon" href="assets/pixel_broccoli_128.png" />
 
-<!-- Social sharing (Open Graph / Twitter) -->
-<meta property="og:type" content="website" />
-<meta property="og:title" content="Rotating Veggies" />
-<meta property="og:description" content="Rotating veggies. What did you expect?" />
-<meta property="og:url" content="https://rotatingveggies.com/" />
-<meta property="og:image" content="https://rotatingveggies.com/pixel_broccoli_128.png" />
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:width" content="128" />
-<meta property="og:image:height" content="128" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Rotating Veggies" />
+  <meta property="og:description" content="Rotating veggies. What did you expect?" />
+  <meta property="og:url" content="https://rotatingveggies.com/" />
+  <meta property="og:image" content="https://rotatingveggies.com/pixel_broccoli_128.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="128" />
+  <meta property="og:image:height" content="128" />
 
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Rotating Veggies" />
-<meta name="twitter:description" content="Rotating veggies. What did you expect?" />
-<meta name="twitter:image" content="https://rotatingveggies.com/pixel_broccoli_128.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Rotating Veggies" />
+  <meta name="twitter:description" content="Rotating veggies. What did you expect?" />
+  <meta name="twitter:image" content="https://rotatingveggies.com/pixel_broccoli_128.png" />
 
-<link rel="canonical" href="https://rotatingveggies.com/" />
-<meta name="theme-color" content="#0b1220" />
+  <link rel="canonical" href="https://rotatingveggies.com/" />
+  <meta name="theme-color" content="#0b1220" />
 
-<style>
-  :root {
-    --stage-max: 78vmin;
-    --stage-max-px: 520px;
-    --speed: 6s;
-    --tiltX: 8deg;
-    --tiltY: 0deg;
-    --scale: 1;
-    --dir: 1;
-  }
-  html, body {
-    height: 100%; margin: 0;
-    background: #0b1220;
-    display: grid; place-items: center;
-    overflow: hidden;
-    overscroll-behavior: none;
-    -webkit-text-size-adjust: 100%;
-  }
-  .stage {
-    width: min(var(--stage-max), var(--stage-max-px));
-    aspect-ratio: 1/1;
-    display: grid; place-items: center;
-    overflow: hidden;
-    border-radius: 10px;
-    contain: layout paint;
-    position: relative; /* overlay anchor for headline & canvas */
-  }
-  .sprite {
-    width: 100%; height: 100%;
-    object-fit: contain;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    -ms-interpolation-mode: nearest-neighbor;
-    will-change: transform;
-    backface-visibility: hidden;
-    transform-origin: center center;
-    animation: spin var(--speed) linear infinite;
-    filter: drop-shadow(0 18px 50px rgba(0,0,0,.45));
-    cursor: pointer;
-  }
-  @keyframes spin {
-    from { transform: rotateX(var(--tiltX)) rotateY(var(--tiltY)) scale(var(--scale)) rotateZ(0deg); }
-    to   { transform: rotateX(var(--tiltX)) rotateY(var(--tiltY)) scale(var(--scale)) rotateZ(calc(var(--dir) * 360deg)); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .sprite { animation: none; }
-  }
-
-  /* overlay headline for golden carrot */
-  #headline {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: none;
-    color: #e2e8f0;
-    font: 700 1.6rem/1.2 system-ui, sans-serif;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
-    pointer-events: none; /* nicht klickbar */
-  }
-
-  /* particles canvas overlay */
-  #burst {
-    position: absolute;
-    inset: 0;
-    pointer-events: none; /* nur visuell */
-  }
-</style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
   <div class="stage" id="stage">
     <img id="sprite" class="sprite" src="" alt="Pixel Veggie" />
     <h1 id="headline">Huh?</h1>
   </div>
 
-<script>
-/* --- Single source of truth --- */
-const VEGGIES = [
-  { key: "broccoli",     label: "Broccoli",      weight: 4 },
-  { key: "carrot",       label: "Carrot",        weight: 4 },
-  { key: "carrot_gold",  label: "Golden Carrot", weight: 1 },
-  { key: "cauliflower",  label: "Cauliflower",   weight: 4 },
-  { key: "tomato",       label: "Tomato",        weight: 4 },
-  { key: "cucumber",     label: "Cucumber",      weight: 4 },
-  { key: "corn",         label: "Corn",          weight: 4 },
-  { key: "eggplant",     label: "Eggplant",      weight: 4 },
-  { key: "lettuce",      label: "Lettuce",       weight: 4 },
-  { key: "potato",       label: "Potato",        weight: 4 },
-  { key: "pumpkin",      label: "Pumpkin",       weight: 4 },
-  { key: "radish",       label: "Radish",        weight: 4 },
-  { key: "red_pepper",   label: "Pepper",        weight: 4 },
-  { key: "red_chili",    label: "Chili",         weight: 4 },
-  { key: "green_bean",   label: "Green bean",    weight: 4 },
-  { key: "parsnip",      label: "Parsnip",       weight: 4 },
-  { key: "fennel",       label: "Fennel",        weight: 4 },
-  { key: "spinach",      label: "Spinach",       weight: 4 },
-  { key: "celery",       label: "Celery",        weight: 4 },
-  { key: "garlic",       label: "Garlic",        weight: 4 },
-  { key: "ginger",       label: "Ginger",        weight: 4 },
-  { key: "mushroom",     label: "Mushroom",      weight: 4 },
-  { key: "artichoke",    label: "Artichoke",     weight: 4 },
-  { key: "radicchio",    label: "Radicchio",     weight: 4 },
-  { key: "chard",        label: "Chard",         weight: 4 },
-  { key: "asparagus",    label: "Asparagus",     weight: 4 },
-  { key: "onion",        label: "Onion",         weight: 4 },
-  { key: "red_onion",    label: "Red onion",     weight: 4 },
-  { key: "leek",         label: "Leek",          weight: 4 }
-];
-
-const fileFor = (key) => `pixel_${key}_128.png`;
-const isGoldenKey = (key) => key === "carrot_gold";
-
-/* Preload all images */
-(function addPreloads(){
-  const head = document.head;
-  VEGGIES.forEach(v => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = fileFor(v.key);
-    head.appendChild(link);
-  });
-})();
-
-const stage = document.getElementById('stage');
-const sprite = document.getElementById('sprite');
-const headline = document.getElementById('headline');
-
-/* Weighted random pick */
-function pickWeighted(list) {
-  const total = list.reduce((sum, v) => sum + (v.weight || 1), 0);
-  let r = Math.random() * total;
-  for (const v of list) {
-    r -= (v.weight || 1);
-    if (r < 0) return v;
-  }
-  return list[0];
-}
-
-/* State */
-let currentVeggie = null;
-let inBurst = false;
-
-/* Show a veggie */
-function showVeggie(veggie) {
-  currentVeggie = veggie;
-
-  sprite.src = fileFor(veggie.key);
-  sprite.alt = veggie.label;
-  sprite.title = veggie.label;
-
-  const golden = isGoldenKey(veggie.key);
-  headline.style.display = golden ? "block" : "none";
-
-  // Random spin
-  const dir = Math.random() < 0.5 ? 1 : -1;
-  document.documentElement.style.setProperty("--dir", dir);
-
-  // Golden burst preparation
-  if (golden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    sprite.addEventListener('click', onGoldenClick, { once: true });
-  }
-}
-
-/* Golden-click handler */
-function onGoldenClick() {
-  if (inBurst) return;
-  inBurst = true;
-  spawnGoldenBurst(() => {
-    inBurst = false;
-  });
-}
-
-/* Initial veggie */
-showVeggie(pickWeighted(VEGGIES));
-
-/* Click for new veggie */
-sprite.addEventListener('click', () => {
-  if (inBurst) return;
-  showVeggie(pickWeighted(VEGGIES));
-});
-
-/* Stage sizing */
-function applyStageSize() {
-  const vw = Math.min(window.innerWidth, window.screen.width || window.innerWidth);
-  const vh = Math.min(window.innerHeight, window.screen.height || window.innerHeight);
-  const vminPx = Math.min(vw, vh) * 0.78;
-  const size = Math.min(vminPx, 520);
-  stage.style.width = size + 'px';
-}
-addEventListener('resize', applyStageSize, { passive: true });
-addEventListener('orientationchange', applyStageSize);
-applyStageSize();
-
-/* Wobble */
-if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  let t = 0;
-  (function wobble() {
-    t += 0.016;
-    const wob = 0.08;
-    sprite.style.translate = `${Math.sin(t * 2.1) * wob * 6}px ${Math.cos(t * 1.8) * wob * 5}px`;
-    requestAnimationFrame(wobble);
-  })();
-}
-
-/* Golden Carrot burst */
-function spawnGoldenBurst(onEnd) {
-  const canvas = document.createElement('canvas');
-  canvas.id = 'burst';
-  stage.appendChild(canvas);
-
-  const ctx = canvas.getContext('2d');
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
-
-  function resizeCanvas() {
-    const rect = stage.getBoundingClientRect();
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-    canvas.width = Math.floor(rect.width * dpr);
-    canvas.height = Math.floor(rect.height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-  }
-  resizeCanvas();
-  addEventListener('resize', resizeCanvas, { passive:true });
-
-  const img = new Image();
-  img.src = fileFor('carrot_gold');
-
-  img.onload = () => startBurst(img);
-  if (img.complete) startBurst(img);
-
-  function startBurst(image) {
-    const rect = stage.getBoundingClientRect();
-    const origin = { x: rect.width / 2, y: rect.height / 2 };
-
-    const count = 90;
-    const particles = [];
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 180 + Math.random() * 220;
-      const vx = Math.cos(angle) * speed;
-      const vy = Math.sin(angle) * speed;
-
-      particles.push({
-        x: origin.x,
-        y: origin.y,
-        vx, vy,
-        life: 0,
-        ttl: 900 + Math.random()*400,
-        size: 10 + Math.random()*12,
-        rot: Math.random() * Math.PI * 2,
-        vr: (Math.random() - 0.5) * 3.0
-      });
-    }
-
-    let prev = performance.now();
-
-    function tick(now) {
-      const dt = Math.min(50, now - prev);
-      prev = now;
-
-      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-
-      let alive = 0;
-      for (const p of particles) {
-        p.life += dt;
-        if (p.life > p.ttl) continue;
-
-        const drag = 0.998;
-        p.vx *= drag;
-        p.vy *= drag;
-
-        p.x += (p.vx * dt) / 1000;
-        p.y += (p.vy * dt) / 1000;
-        p.rot += p.vr * (dt / 1000);
-
-        const t = p.life / p.ttl;
-        const alpha = 1 - t*t;
-        if (alpha <= 0) continue;
-
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.drawImage(image, -p.size/2, -p.size/2, p.size, p.size);
-        ctx.restore();
-
-        alive++;
-      }
-
-      if (alive > 0) {
-        requestAnimationFrame(tick);
-      } else {
-        canvas.remove();
-        removeEventListener('resize', resizeCanvas);
-        if (typeof onEnd === 'function') onEnd();
-      }
-    }
-
-    requestAnimationFrame(tick);
-  }
-}
-</script>
+  <script src="js/main.js"></script>
 </body>
 </html>
