@@ -32,11 +32,11 @@
   :root {
     --stage-max: 78vmin;
     --stage-max-px: 520px;
-    --speed: 6s;   /* fixed rotation speed */
-    --tiltX: 8deg; /* fixed tilt */
+    --speed: 6s;
+    --tiltX: 8deg;
     --tiltY: 0deg;
     --scale: 1;
-    --dir: 1;      /* set randomly by JS */
+    --dir: 1;
   }
   html, body {
     height: 100%; margin: 0;
@@ -114,9 +114,26 @@ const VEGGIES = [
   { key: "cucumber",     label: "Cucumber",      weight: 4 },
   { key: "corn",         label: "Corn",          weight: 4 },
   { key: "eggplant",     label: "Eggplant",      weight: 4 },
+  { key: "lettuce",      label: "Lettuce",       weight: 4 },
   { key: "potato",       label: "Potato",        weight: 4 },
   { key: "pumpkin",      label: "Pumpkin",       weight: 4 },
   { key: "radish",       label: "Radish",        weight: 4 },
+  { key: "red_pepper",   label: "Pepper",        weight: 4 },
+  { key: "red_chili",    label: "Chili",         weight: 4 },
+  { key: "green_bean",   label: "Green bean",    weight: 4 },
+  { key: "parsnip",      label: "Parsnip",       weight: 4 },
+  { key: "fennel",       label: "Fennel",        weight: 4 },
+  { key: "spinach",      label: "Spinach",       weight: 4 },
+  { key: "celery",       label: "Celery",        weight: 4 },
+  { key: "garlic",       label: "Garlic",        weight: 4 },
+  { key: "ginger",       label: "Ginger",        weight: 4 },
+  { key: "mushroom",     label: "Mushroom",      weight: 4 },
+  { key: "artichoke",    label: "Artichoke",     weight: 4 },
+  { key: "radicchio",    label: "Radicchio",     weight: 4 },
+  { key: "chard",        label: "Chard",         weight: 4 },
+  { key: "asparagus",    label: "Asparagus",     weight: 4 },
+  { key: "onion",        label: "Onion",         weight: 4 },
+  { key: "red_onion",    label: "Red onion",     weight: 4 },
   { key: "leek",         label: "Leek",          weight: 4 }
 ];
 
@@ -165,11 +182,11 @@ function showVeggie(veggie) {
   const golden = isGoldenKey(veggie.key);
   headline.style.display = golden ? "block" : "none";
 
-  // neue zufällige Drehrichtung
+  // Random spin
   const dir = Math.random() < 0.5 ? 1 : -1;
   document.documentElement.style.setProperty("--dir", dir);
 
-  // Golden: Burst vorbereiten
+  // Golden burst preparation
   if (golden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     sprite.addEventListener('click', onGoldenClick, { once: true });
   }
@@ -187,7 +204,7 @@ function onGoldenClick() {
 /* Initial veggie */
 showVeggie(pickWeighted(VEGGIES));
 
-/* Jeder Klick → neues Gemüse (außer während Burst) */
+/* Click for new veggie */
 sprite.addEventListener('click', () => {
   if (inBurst) return;
   showVeggie(pickWeighted(VEGGIES));
