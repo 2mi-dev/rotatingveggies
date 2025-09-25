@@ -27,6 +27,7 @@ const VEGGIES = [
   { key: "celery",       label: "Celery",        weight: 6 },
   { key: "garlic",       label: "Garlic",        weight: 6 },
   { key: "ginger",       label: "Ginger",        weight: 6 },
+  { key: "avocado",      label: "Avocado",       weight: 6 },
   { key: "mushroom",     label: "Mushroom",      weight: 6 },
   { key: "artichoke",    label: "Artichoke",     weight: 6 },
   { key: "radicchio",    label: "Radicchio",     weight: 6 },
